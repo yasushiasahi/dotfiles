@@ -1,0 +1,24 @@
+# Compiled
+*.elc
+
+# Packaging
+.cask
+
+# Backup files
+*~
+
+# Undo-tree save-files
+*.~undo-tree
+
+
+
+
+
+
+.DS_Store
+/auto-save-list
+/eln-cache
+/elpa
+/custom.el
+/backups/*
+!/backups/.gitkeep
