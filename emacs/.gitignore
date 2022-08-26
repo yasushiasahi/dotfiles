@@ -1,0 +1,20 @@
+# Compiled
+*.elc
+
+# Packaging
+.cask
+
+# Backup files
+*~
+
+# Undo-tree save-files
+*.~undo-tree
+
+# ネイティブコンパイルのキャッシュ
+/eln-cache
+
+# no-litteringがまとめてくれる設定ファイル
+/var
+
+＃ パッケージファイル
+/elpa
