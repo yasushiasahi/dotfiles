@@ -27,6 +27,12 @@
 (set-face-attribute 'default nil
                     :family "Fira Code")
 
+;; https://github.com/emacscollective/no-littering#native-compilation-cache
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (convert-standard-filename
+	  (expand-file-name  "var/eln-cache/" user-emacs-directory))))
+
 (setq native-comp-async-report-warnings-errors 'silent) ; emacs28 with native compilation
 
 ;;; early-init.el ends here

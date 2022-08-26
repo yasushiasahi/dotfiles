@@ -88,12 +88,8 @@
 (leaf 細々した内部的な設定
   :init
   (leaf no-littering :ensure t
-    :doc "自動生成される設定ファイルの保存先に秩序をもたらす"
+    :doc "自動生成される設定ファイルの保存先をverとetcに限定する"
     :url "https://github.com/emacscollective/no-littering"
-    :custom `(;; init.el内にcustom-set-variablesのダンプを履かせない
-	      (custom-file . ,(no-littering-expand-etc-file-name "custom.el"))
-	      ;; オートセーブファイルの場所
-	      (auto-save-file-name-transforms . '((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
     :config
     (leaf recentf
       :doc "最近開いたファイルの履歴を保存する"
@@ -101,7 +97,15 @@
       :custom ((recentf-max-saved-items . 2000))
       :config
       (add-to-list 'recentf-exclude no-littering-var-directory)
-      (add-to-list 'recentf-exclude no-littering-etc-directory))))
+      (add-to-list 'recentf-exclude no-littering-etc-directory))
+
+    (leaf cus-start
+      :doc "編集中のファイルのバックアップを作成する"
+      :custom `((auto-save-file-name-transforms . '((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))))
+
+    (leaf cus-edit
+      :doc "init.el内にcustom-set-variablesのダンプを吐かせないようにする"
+      :custom `((custom-file . ,(no-littering-expand-etc-file-name "custom.el"))))))
 
 (leaf 使いやすいキーバインドにするぞ
   :init
@@ -292,3 +296,16 @@
 
 
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(corfu-doc corfu marginalia orderless consult vertico multiple-cursors which-key vundo rainbow-delimiters expand-region smartparens tree-sitter-langs tree-sitter fira-code-mode solarized-theme macrostep leaf-convert leaf-tree hydra leaf-keywords leaf)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
