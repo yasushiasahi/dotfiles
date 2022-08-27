@@ -9,7 +9,6 @@ brew "exa"
 brew "fd"
 brew "fish"
 brew "ghq"
-brew "mas"
 brew "ripgrep"
 brew "tmux"
 brew "trash"
@@ -20,6 +19,3 @@ cask "font-fira-code-nerd-font"
 cask "google-chrome"
 cask "kindle"
 cask "notion"
-
-mas "LINE", id: 539883307
-mas "Yoink", id: 457622435
