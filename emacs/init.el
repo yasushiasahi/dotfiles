@@ -51,42 +51,19 @@
     :custom ((fira-code-mode-disabled-ligatures . '("[]" "#{" "#(" "#_" "#_(" "x")))
     :hook prog-mode-hook)
 
-  ;; https://zenn.dev/hyakt/articles/6ff892c2edbabb#%E8%A8%AD%E5%AE%9A
-  (leaf tree-sitter :ensure (t tree-sitter-langs)
-    :doc "各言語に上質なシンタックスハイライトを適用する"
-    :url "https://github.com/emacs-tree-sitter/elisp-tree-sitter"
-    :require tree-sitter-langs
-    :config
-    (global-tree-sitter-mode)
-    (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-    ;; TSXの対応
-    (tree-sitter-require 'tsx)
-    (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
-    ;; ハイライトの追加
-    (tree-sitter-hl-add-patterns 'tsx
-      [
-       ;; styled.div``
-       (call_expression
-        function: (member_expression
-                   object: (identifier) @function.call
-                   (.eq? @function.call "styled"))
-        arguments: ((template_string) @property.definition
-                    (.offset! @property.definition 0 1 0 -1)))
-       ;; styled(Component)``
-       (call_expression
-        function: (call_expression
-                   function: (identifier) @function.call
-                   (.eq? @function.call "styled"))
-        arguments: ((template_string) @property.definition
-                    (.offset! @property.definition 0 1 0 -1)))
-       ]))
-
   (defun display-startup-echo-area-message ()
     "Emacs起動後エコーエリアに表示される文字列"
     (message "オレ達が本当に力を貸してほしい時にはきっと連絡とれるよ逆にオレ達の力が本当に必要な時はあっちから連絡をくれる by ゴン・フリークス『HUNTER×HUNTER』")))
 
 (leaf 細々した内部的な設定
   :init
+  (leaf 何はともあれPATHの設定(asdfのパスを加える)
+    :config
+    (let ((asdf-shims-path
+	   (concat (getenv "HOME") "/.asdf/shims")))
+      (setenv "PATH" (concat (getenv "PATH") ":" asdf-shims-path))
+      (add-to-list 'exec-path asdf-shims-path)))
+
   (leaf no-littering :ensure t
     :doc "自動生成される設定ファイルの保存先をverとetcに限定する"
     :url "https://github.com/emacscollective/no-littering"
@@ -208,63 +185,27 @@
 
 (leaf 最強の補完インターフェイスを作り上げるぞ
   :init
-  (leaf ミニバッファ補完を活用するぞ
-    :init
-    (leaf vertico :ensure t
-      :doc "ミニバッファに垂直に候補を表示して、インタラクティブに選択出来るUIを提供する"
-      :url "https://github.com/minad/vertico"
-      :global-minor-mode t)
+  (leaf vertico :ensure t
+    :doc "ミニバッファに垂直に候補を表示して、インタラクティブに選択出来るUIを提供する"
+    :url "https://github.com/minad/vertico"
+    :global-minor-mode t)
 
-    (leaf consult :ensure t
-      :doc "補完コマンドを提供する"
-      :url "https://github.com/minad/consult"
-      :bind (;; C-x bindings (ctl-x-map)
-	     ("C-x b" . consult-buffer)
-             ("C-x 4 b" . consult-buffer-other-window)
-             ("C-x 5 b" . consult-buffer-other-frame)
-	     ;; M-g bindings (goto-map)
-             ("M-g g" . consult-goto-line)
-	     ;; M-s bindings (search-map)
-	     ("M-s l" . consult-line)
-             ("M-s r" . consult-ripgrep)
-	     ("M-s d" . consult-find)
-	     ("M-s g r" . my-consult-ghq-ripgrep)
-	     ("M-s g d" . my-consult-ghq-find))
-      :config
-      (leaf my-consult-ghq:ghqの結果をconsultに渡す
-	:init
-	(defun my-consult-ghq--list-candidates ()
-	  "ghq listの結果をリストで返す"
-	  (with-temp-buffer
-	    (unless (zerop (apply #'call-process "ghq" nil t nil '("list" "--full-path")))
-	      (error "Failed: Cannot get ghq list candidates"))
-	    (let ((paths))
-	      (goto-char (point-min))
-	      (while (not (eobp))
-		(push
-		 (buffer-substring-no-properties
-		  (line-beginning-position) (line-end-position))
-		 paths)
-		(forward-line 1))
-	      (nreverse paths))))
-
-	(defun my-consult-ghq--read ()
-	  "ghq管理のリポジトリ一覧から選ぶ"
-	  (consult--read
-	   (my-consult-ghq--list-candidates)
-	   :prompt "ghq: "
-	   :category 'file))
-
-	(defun my-consult-ghq-find ()
-	  "ghq管理のリポジトリ一覧から選び、プロジェクト内ファイル検索"
-	  (interactive)
-	  (consult-find (my-consult-ghq--read)))
-
-	(defun my-consult-ghq-ripgrep ()
-	  "ghq管理のリポジトリ一覧から選び、プロジェクト内でripgrep"
-	  (interactive)
-	  (consult-ripgrep (my-consult-ghq--read)))))
-
+  (leaf consult :ensure t
+    :doc "補完コマンドを提供する"
+    :url "https://github.com/minad/consult"
+    :bind (;; C-x bindings (ctl-x-map)
+	   ("C-x b" . consult-buffer)
+           ("C-x 4 b" . consult-buffer-other-window)
+           ("C-x 5 b" . consult-buffer-other-frame)
+	   ;; M-g bindings (goto-map)
+           ("M-g g" . consult-goto-line)
+	   ;; M-s bindings (search-map)
+	   ("M-s l" . consult-line)
+           ("M-s r" . consult-ripgrep)
+	   ("M-s d" . consult-find)
+	   ("M-s g r" . my-consult-ghq-ripgrep)
+	   ("M-s g d" . my-consult-ghq-find))
+    :config
     (leaf orderless :ensure t
       :doc "補完候補絞込のいい感じのスタイルを提供する"
       :url "https://github.com/oantolin/orderless"
@@ -273,39 +214,190 @@
     (leaf marginalia :ensure t
       :doc "補完候補の詳細を表示する"
       :url "https://github.com/minad/marginalia"
-      :global-minor-mode t))
+      :global-minor-mode t)
 
-  (leaf オートコンプリートはコードエディタの真骨頂
-    :init
-    (leaf corfu :ensure t
-      :doc "オートコンプリートインターフェイス"
-      :url "https://github.com/minad/corfu"
-      :custom ((corfu-auto . t)
-	       (corfu-quit-no-match . t)
-	       (corfu-auto-prefix . 2))
+    (leaf consult-flycheck :ensure t
+      :doc "Provides the command `consult-flycheck'"
+      :url "https://github.com/minad/consult")
+
+    (leaf consult-lsp :ensure t
+      :doc "LSP-mode Consult integration"
+      :url "https://github.com/gagbo/consult-lsp")
+
+    (leaf my-consult-ghq:ghqの結果をconsultに渡す
       :init
-      (global-corfu-mode)
-      :config
-      (leaf corfu-doc :ensure t
-	:doc "Corfuの選択対象のドキュメントを表示"
-	:url "https://github.com/galeo/corfu-doc"
-	:bind (:corfu-map
-	       ("M-p" . corfu-doc-scroll-down)
-	       ("M-n" . corfu-doc-scroll-up))
-	:hook corfu-mode-hook))))
+      (defun my-consult-ghq--list-candidates ()
+	"ghq listの結果をリストで返す"
+	(with-temp-buffer
+	  (unless (zerop (apply #'call-process "ghq" nil t nil '("list" "--full-path")))
+	    (error "Failed: Cannot get ghq list candidates"))
+	  (let ((paths))
+	    (goto-char (point-min))
+	    (while (not (eobp))
+	      (push
+	       (buffer-substring-no-properties
+		(line-beginning-position) (line-end-position))
+	       paths)
+	      (forward-line 1))
+	    (nreverse paths))))
+
+      (defun my-consult-ghq--read ()
+	"ghq管理のリポジトリ一覧から選ぶ"
+	(consult--read
+	 (my-consult-ghq--list-candidates)
+	 :prompt "ghq: "
+	 :category 'file))
+
+      (defun my-consult-ghq-find ()
+	"ghq管理のリポジトリ一覧から選び、プロジェクト内ファイル検索"
+	(interactive)
+	(consult-find (my-consult-ghq--read)))
+
+      (defun my-consult-ghq-ripgrep ()
+	"ghq管理のリポジトリ一覧から選び、プロジェクト内でripgrep"
+	(interactive)
+	(consult-ripgrep (my-consult-ghq--read)))))
+
+  (leaf corfu :ensure t
+    :doc "オートコンプリートインターフェイス"
+    :url "https://github.com/minad/corfu"
+    :custom ((corfu-count . 30)
+	     (corfu-auto . t)
+	     (corfu-cycle . t)
+	     (corfu-quit-no-match . t)
+	     (corfu-auto-prefix . 2))
+    :bind (:corfu-map
+	   ("C-f" . corfu-insert))
+    :init
+    (global-corfu-mode)
+    :config
+    (leaf corfu-doc :ensure t
+      :doc "Corfuの選択対象のドキュメントを表示"
+      :url "https://github.com/galeo/corfu-doc"
+      :bind (:corfu-map
+	     ("M-p" . corfu-doc-scroll-down)
+	     ("M-n" . corfu-doc-scroll-up))
+      :hook corfu-mode-hook)))
+
+(leaf プログラミングを快適にするユーティリティだぞ
+  :init
+  ;; https://zenn.dev/hyakt/articles/6ff892c2edbabb#%E8%A8%AD%E5%AE%9A
+  (leaf tree-sitter :ensure (t tree-sitter-langs)
+    :doc "各言語に上質なシンタックスハイライトを適用する"
+    :url "https://github.com/emacs-tree-sitter/elisp-tree-sitter"
+    :require tree-sitter-langs
+    :config
+    (global-tree-sitter-mode)
+    (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+    ;; TSXの対応
+    (tree-sitter-require 'tsx)
+    (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
+    ;; ハイライトの追加
+    (tree-sitter-hl-add-patterns 'tsx
+      [
+       ;; styled.div``
+       (call_expression
+        function: (member_expression
+                   object: (identifier) @function.call
+                   (.eq? @function.call "styled"))
+        arguments: ((template_string) @property.definition
+                    (.offset! @property.definition 0 1 0 -1)))
+       ;; styled(Component)``
+       (call_expression
+        function: (call_expression
+                   function: (identifier) @function.call
+                   (.eq? @function.call "styled"))
+        arguments: ((template_string) @property.definition
+                    (.offset! @property.definition 0 1 0 -1)))
+       ]))
+
+  (leaf add-node-modules-path :ensure t
+    :doc "Add node_modules to your exec-path"
+    :url "https://github.com/codesuki/add-node-modules-path"
+    :hook ((typescript-mode-hook typescript-tsx-mode-hook js-mode-hook) . add-node-modules-path))
+
+  (leaf prettier-js :ensure t
+    :doc "Minor mode to format JS code on file save"
+    :url "https://github.com/prettier/prettier-emacs"
+    :hook typescript-tsx-mode-hook typescript-mode-hook js-mode-hook)
+
+  (leaf flycheck :ensure t
+    :doc "On-the-fly syntax checking"
+    :url "http://www.flycheck.org"
+    :init
+    (global-flycheck-mode))
+
+  (leaf lsp-mode :ensure t
+    :doc "LSP mode"
+    :url "https://github.com/emacs-lsp/lsp-mode"
+    :hook ((lsp-mode-hook . lsp-enable-which-key-integration)
+           ((typescript-mode-hook typescript-tsx-mode-hook) . lsp-deferred))
+    :custom `(;; (gc-cons-threshold . 100000000)
+              ;; (read-process-output-max . 1048576)
+	      ;; (lsp-idle-delay . 0.5)
+              ;; (lsp-keymap-prefix . "C-c l")
+              ;; (lsp-enable-indentation . nil)
+              ;; (lsp-headerline-breadcrumb-enable . nil)
+              ;; rust
+              ;; (lsp-rust-analyzer-cargo-watch-command . "clippy")
+              ;; (lsp-rust-analyzer-proc-macro-enable . t)
+              ;; (lsp-rust-analyzer-experimental-proc-attr-macros . t)
+              ;; (lsp-rust-analyzer-server-display-inlay-hints . t)
+	      ;; eslint
+	      (lsp-eslint-server-command . '("node"
+					     ,(concat (getenv "HOME") "/ghq/github.com/microsoft/vscode-eslint/server/out/eslintServer.js")
+					     "--stdio"))
+	      )
+    :defvar lsp-file-watch-ignored-directories
+    :config
+    (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.next\\'")
+
+    (leaf lsp-ui :ensure t
+      :doc "UI modules for lsp-mode"
+      :url "https://github.com/emacs-lsp/lsp-ui")
+
+    ;; (leaf lsp-tailwindcss :ensure t
+    ;;   :doc "A lsp-mode client for tailwindcss"
+    ;;   :url "https://github.com/merrickluo/lsp-tailwindcss")
+    )
+
+
+
+
+  )
+
+
+
+
+
+
+(leaf 快適にプログラミングできるようにするぞ
+  :init
+  (leaf typescript-mode :ensure t
+    :doc "Major mode for editing typescript"
+    :url "http://github.com/ananthakumaran/typescript.el"
+    :preface
+    (define-derived-mode typescript-tsx-mode typescript-mode "React")
+    :mode ("\\.ts\\'"
+           ("\\.tsx\\'" . typescript-tsx-mode))
+    :custom ((typescript-indent-level . 2)))
+
+  (leaf fish-mode :ensure t
+    :doc "Fishモード"
+    :hook `((fish-mode-hook . ,(lambda ()
+				 (add-hook 'before-save-hook 'fish_indent-before-save)))))
+
+  (leaf yaml-mode :ensure t
+    :doc "Major mode for editing YAML files"
+    :url "https://github.com/yoshiki/yaml-mode"
+    :bind (:yaml-mode-map
+	   ("C-m" . newline-and-indent)))
+
+
+
+
+
+  )
 
 
 ;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(corfu-doc corfu marginalia orderless consult vertico multiple-cursors which-key vundo rainbow-delimiters expand-region smartparens tree-sitter-langs tree-sitter fira-code-mode solarized-theme macrostep leaf-convert leaf-tree hydra leaf-keywords leaf)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
