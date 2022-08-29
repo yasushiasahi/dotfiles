@@ -17,22 +17,22 @@
 (setq initial-scratch-message nil)
 (setq x-underline-at-descent-line t)
 
-(setq inhibit-startup-echo-area-message user-login-name) ; read the docstring
+(setq inhibit-startup-echo-area-message nil) ; read the docstring
 (setq inhibit-startup-screen t)
 (setq inhibit-startup-buffer-menu t)
 
-(push '(fullscreen . maximized) initial-frame-alist)
-(push '(ns-transparent-titlebar . t) default-frame-alist)
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . dark))
 
-(set-face-attribute 'default nil
-                    :family "Fira Code")
+(set-face-attribute 'default nil :family "Cica" :height 150)
 
+;; (setq native-comp-async-report-warnings-errors 'silent) ; emacs28 with native compilation
+
+;; emacs 29 から設定しておくとよい
 ;; https://github.com/emacscollective/no-littering#native-compilation-cache
-(when (fboundp 'startup-redirect-eln-cache)
-  (startup-redirect-eln-cache
-   (convert-standard-filename
-	  (expand-file-name  "var/eln-cache/" user-emacs-directory))))
-
-(setq native-comp-async-report-warnings-errors 'silent) ; emacs28 with native compilation
+;; (when (fboundp 'startup-redirect-eln-cache)
+;;   (startup-redirect-eln-cache
+;;    (convert-standard-filename
+;; 	  (expand-file-name  "var/eln-cache/" user-emacs-directory))))
 
 ;;; early-init.el ends here

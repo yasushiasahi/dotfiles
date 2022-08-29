@@ -37,6 +37,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (leaf 美しい見た目にするぞ
   :init
+  ;; titlebarに入れる文字列
+  (setq frame-title-format "%b")
+
   (leaf solarized-theme :ensure t
     :doc "Solarizedテーマを適用"
     :url "http://github.com/bbatsov/solarized-emacs"
@@ -45,24 +48,18 @@
     :init
     (load-theme 'solarized-dark t))
 
-  (leaf fira-code-mode :ensure t
-    :doc "Fira Codoフォントのリガチャをいい感じに設定"
-    :url "https://github.com/jming422/fira-code-mode"
-    :custom ((fira-code-mode-disabled-ligatures . '("[]" "#{" "#(" "#_" "#_(" "x")))
-    :hook prog-mode-hook)
-
   (defun display-startup-echo-area-message ()
     "Emacs起動後エコーエリアに表示される文字列"
-    (message "オレ達が本当に力を貸してほしい時にはきっと連絡とれるよ逆にオレ達の力が本当に必要な時はあっちから連絡をくれる by ゴン・フリークス『HUNTER×HUNTER』")))
+    (message "")))
 
 (leaf 細々した内部的な設定
   :init
-  (leaf 何はともあれPATHの設定(asdfのパスを加える)
-    :config
-    (let ((asdf-shims-path
-	   (concat (getenv "HOME") "/.asdf/shims")))
-      (setenv "PATH" (concat (getenv "PATH") ":" asdf-shims-path))
-      (add-to-list 'exec-path asdf-shims-path)))
+  ;; (leaf 何はともあれPATHの設定(asdfのパスを加える)
+  ;;   :config
+  ;;   (let ((asdf-shims-path
+  ;; 	   (concat (getenv "HOME") "/.asdf/shims")))
+  ;;     (setenv "PATH" (concat (getenv "PATH") ":" asdf-shims-path))
+  ;;     (add-to-list 'exec-path asdf-shims-path)))
 
   (leaf no-littering :ensure t
     :doc "自動生成される設定ファイルの保存先をverとetcに限定する"

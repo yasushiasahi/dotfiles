@@ -7,7 +7,7 @@ window:
   # by DPI and the specified value is always added at both opposing sides.
   padding:
     x: 10
-    y: 8
+    y: 10
 
   # Window decorations
   #
@@ -18,7 +18,7 @@ window:
   # Values for `decorations` (macOS only):
   #     - transparent: Title bar, transparent background and title bar buttons
   #     - buttonless: Title bar, transparent background and no title bar buttons
-  decorations: buttonless
+  decorations: transparent
 
   # Startup Mode (changes require restart)
   #
@@ -34,22 +34,22 @@ window:
 font:
   # Normal (roman) font face
   normal:
-    family: "FiraCode Nerd Font"
+    family: "Cica"
 
   # Bold font face
   bold:
-    family: "FiraCode Nerd Font"
+    family: "Cica"
 
   # Italic font face
   italic:
-    family: "FiraCode Nerd Font"
+    family: "Cica"
 
   # Bold italic font face
   bold_italic:
-    family: "FiraCode Nerd Font"
+    family: "Cica"
 
   # Point size
-  size: 12.0
+  size: 15
 
   # Offset is the extra space around each character. `offset.y` can be thought
   # of as modifying the line spacing, and `offset.x` as modifying the letter
@@ -57,6 +57,12 @@ font:
   offset:
     x: 0
     y: 2
+
+  # Thin stroke font rendering (macOS only)
+  #
+  # Thin strokes are suitable for retina displays, but for non-retina screens
+  # it is recommended to set `use_thin_strokes` to `false`.
+  use_thin_strokes: true
 
 
 # Colors (Solarized Dark)
@@ -88,3 +94,15 @@ colors:
     magenta: '0x6c71c4'
     cyan:    '0x93a1a1'
     white:   '0xfdf6e3'
+
+key_bindings:
+    # https://github.com/alacritty/alacritty/wiki/Keyboard-mappings#macos
+  - { key: Comma,     mods: Command,      command:
+      {program: "sh", args: ["-c","open ~/.config/alacritty/alacritty.yml"]}     }
+  - { key: N,         mods: Command,      action: SpawnNewInstance       }
+  - { key: Space,     mods: Alt,          chars: " "                     }
+  - { key: Back, mods: Super, chars: "\x15" } # delete word/line
+  - { key: Left,     mods: Alt,     chars: "\x1bb"                       } # one word left
+  - { key: Right,    mods: Alt,     chars: "\x1bf"                       } # one word right
+  - { key: Left,     mods: Command, chars: "\x1bOH",   mode: AppCursor   } # Home
+  - { key: Right,    mods: Command, chars: "\x1bOF",   mode: AppCursor   } # End
