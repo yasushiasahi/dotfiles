@@ -54,13 +54,6 @@
 
 (leaf 細々した内部的な設定
   :init
-  ;; (leaf 何はともあれPATHの設定(asdfのパスを加える)
-  ;;   :config
-  ;;   (let ((asdf-shims-path
-  ;; 	   (concat (getenv "HOME") "/.asdf/shims")))
-  ;;     (setenv "PATH" (concat (getenv "PATH") ":" asdf-shims-path))
-  ;;     (add-to-list 'exec-path asdf-shims-path)))
-
   (leaf no-littering :ensure t
     :doc "自動生成される設定ファイルの保存先をverとetcに限定する"
     :url "https://github.com/emacscollective/no-littering"
@@ -79,7 +72,7 @@
 
     (leaf cus-edit
       :doc "init.el内にcustom-set-variablesのダンプを吐かせないようにする"
-      :custom `((custom-file . ,(no-littering-expand-etc-file-name "custom.el"))))))
+      :custom `((custom-file . ,(no-littering-expand-var-file-name "custom.el"))))))
 
 (leaf 使いやすいキーバインドにするぞ
   :init
