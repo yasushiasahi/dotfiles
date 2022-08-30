@@ -21,12 +21,14 @@
 (setq inhibit-startup-screen t)
 (setq inhibit-startup-buffer-menu t)
 
-(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-(add-to-list 'default-frame-alist '(ns-appearance . dark))
+;; mac portでは必要ない
+;; https://github.com/railwaycat/homebrew-emacsmacport/wiki/Natural-Title-Bar
+;; (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+;; (add-to-list 'default-frame-alist '(ns-appearance . dark))
 
-(set-face-attribute 'default nil :family "Cica" :height 150)
+(set-face-attribute 'default nil :family "Cica" :height 140)
 
-;; (setq native-comp-async-report-warnings-errors 'silent) ; emacs28 with native compilation
+(setq native-comp-async-report-warnings-errors 'silent) ; emacs28 with native compilation
 
 ;; emacs 29 から設定しておくとよい
 ;; https://github.com/emacscollective/no-littering#native-compilation-cache
