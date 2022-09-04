@@ -1,40 +1,41 @@
 ;;; early-init.el --- Loaded before the package system and GUI is initialized
-;;; Commentary: Emacs Startup File --- initialization for Emacs
+;;; Commentary:
+;;; Emacs Startup File --- initialization for Emacs
 
 ;;; Code:
 
 ;; Solarizedのテーマが読み込まれるまでの一瞬白背景がちらつくのを抑制
-(set-face-attribute 'default nil :background "#002b36")
+(set-face-attribute 'default nil :family "FiraCode Nerd Font" :height 120 :background "#002b36")
 
+;; GUIを消す
+(menu-bar-mode -1)			; メニューバーを表示しない
+(tool-bar-mode -1)			; ツールバーを表示しない
+(scroll-bar-mode -1)			; スクロールバーを表示しない
 
-;; Disable GUI elements
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(setq inhibit-splash-screen t)
-(setq use-dialog-box t)                 ; only for mouse events
-(setq use-file-dialog nil)
-(setq initial-scratch-message nil)
-(setq x-underline-at-descent-line t)
+(custom-set-variables
+ '(inhibit-startup-echo-area-message t)	  ; 起動時にエコーエリアに挨拶文を表示しない
+ '(inhibit-startup-screen t)		  ; 起動時のデフォルト画面を表示しない
+ '(initial-scratch-message nil)		  ; *scratch*バッファのデフォルト文章を表示しない
+ '(scroll-preserve-screen-position t)	  ; 画面がスクロールする時にカーソルを画面上の位置で固定する
+ '(scroll-conservatively 1)		  ; 1行ずつスクロールする
+ '(create-lockfiles nil)		  ; 編集中のファイルのロックファイル(.#~~)を作らない
+ '(delete-old-versions t)		  ; 古いバックアップファイルを確認なしで消す
+ '(truncate-lines t)			  ; 行を折り返さない
+ '(x-underline-at-descent-line t)	  ; アンダーラインの位置をいい感じにする。solarized-emacsで推奨されている https://github.com/bbatsov/solarized-emacs#underline-position-setting-for-x
+ '(native-comp-async-report-warnings-errors 'silent) ; ネイティブコンパイルのwarningsをbufferに記録するがポップアップはさせない。
+ '(gc-cons-threshold 100000000)			     ; ガベージコレクションが発火するメモリの閾値 https://emacs-lsp.github.io/lsp-mode/page/performance/#adjust-gc-cons-threshold
+ '(read-process-output-max (* 1024 1024))	     ; https://emacs-lsp.github.io/lsp-mode/page/performance/#increase-the-amount-of-data-which-emacs-reads-from-the-process
+ )
 
-(setq inhibit-startup-echo-area-message nil) ; read the docstring
-(setq inhibit-startup-screen t)
-(setq inhibit-startup-buffer-menu t)
-
-;; mac portでは必要ない
-;; https://github.com/railwaycat/homebrew-emacsmacport/wiki/Natural-Title-Bar
+;; Mac portでは必要ない https://github.com/railwaycat/homebrew-emacsmacport/wiki/Natural-Title-Bar
 ;; (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 ;; (add-to-list 'default-frame-alist '(ns-appearance . dark))
 
-(set-face-attribute 'default nil :family "Cica" :height 140)
-
-(setq native-comp-async-report-warnings-errors 'silent) ; emacs28 with native compilation
-
-;; emacs 29 から設定しておくとよい
-;; https://github.com/emacscollective/no-littering#native-compilation-cache
+;; emacs 29から設定しておくとよいらしい https://github.com/emacscollective/no-littering#native-compilation-cache
 ;; (when (fboundp 'startup-redirect-eln-cache)
 ;;   (startup-redirect-eln-cache
 ;;    (convert-standard-filename
 ;; 	  (expand-file-name  "var/eln-cache/" user-emacs-directory))))
+
 
 ;;; early-init.el ends here

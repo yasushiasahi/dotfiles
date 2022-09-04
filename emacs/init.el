@@ -1,5 +1,7 @@
 ;;; init.el --- Initialization file for Emacs  -*- lexical-binding: t; -*-
-;;; Commentary: Emacs Startup File --- initialization for Emacs
+
+;;; Commentary:
+;;; Emacs Startup File --- initialization for Emacs
 
 ;;; Code:
 
@@ -48,9 +50,16 @@
     :init
     (load-theme 'solarized-dark t))
 
-  (defun display-startup-echo-area-message ()
-    "Emacs起動後エコーエリアに表示される文字列"
-    (message "")))
+  (leaf mini-modeline :ensure t
+    :doc "モードラインをミニバッファに表示する"
+    :url "https://github.com/kiennq/emacs-mini-modeline"
+    :global-minor-mode t)
+
+  (leaf fira-code-mode :ensure t
+    :doc "FiraCodeのリガチャをいい感じに設定してくれる"
+    :url "https://github.com/jming422/fira-code-mode"
+    :custom ((fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x")))
+    :hook prog-mode-hook))
 
 (leaf 細々した内部的な設定
   :init
@@ -62,7 +71,12 @@
       :doc "最近開いたファイルの履歴を保存する"
       :global-minor-mode t
       :custom ((recentf-max-saved-items . 2000))
+      :defvar (recentf-exclude)
       :config
+      (setq no-littering-etc-directory
+	    (expand-file-name "etc/" user-emacs-directory))
+      (setq no-littering-var-directory
+	    (expand-file-name "var/" user-emacs-directory))
       (add-to-list 'recentf-exclude no-littering-var-directory)
       (add-to-list 'recentf-exclude no-littering-etc-directory))
 
@@ -75,12 +89,30 @@
       :custom `((custom-file . ,(no-littering-expand-var-file-name "custom.el"))))))
 
 (leaf 使いやすいキーバインドにするぞ
+  :custom ((mac-option-modifier . 'meta)
+	   (mac-command-modifier . 'super))
+  :bind (;; コマンドキーでコピペ操作
+	 ("s-v" . yank)
+	 ("s-c" . kill-ring-save)
+	 ("s-x" . kill-region)
+	 ;; カーソル移動
+	 ("C-a" . my-beginning-of-line-text-or-line))
   :init
-  ;; https://www.emacswiki.org/emacs/BackspaceKey
+  ;; C-hはバックスペースにする https://www.emacswiki.org/emacs/BackspaceKey
   (define-key key-translation-map [?\C-?] [?\C-h])
   (define-key key-translation-map [?\M-\d] [?\M-h])
   (define-key key-translation-map [?\C-h] [?\C-?])
-  (define-key key-translation-map [?\M-h] [?\M-\d]))
+  (define-key key-translation-map [?\M-h] [?\M-\d])
+
+  (defun my-beginning-of-line-text-or-line ()
+    "行の最初の文字の位置に移動。すでに最初の文字だったら行頭に移動。"
+    (interactive)
+    (let ((curr-point (point))		  ; コマンド実行前のカーソル位置
+	  (curr-column (current-column))) ; コマンド実行前の行番号
+      (beginning-of-line-text)		  ; 一旦行の最初の文字の位置に移動
+      (when (and (/= curr-column 0)	  ; 元々行頭にいなかった
+		 (<= curr-point (point))) ; 最初の文字の位置よりも前にいた
+	(beginning-of-line)))))		  ; その場合は行頭に移動
 
 (leaf 一般的な便利機能をいい感じに設定するぞ
   :init
@@ -117,38 +149,6 @@
     :url "https://github.com/justbur/emacs-which-key"
     :global-minor-mode t)
 
-  (leaf multiple-cursors :ensure t
-    :doc "複数カーソルを操作する"
-    :url "https://github.com/magnars/multiple-cursors.el"
-    :bind (("C-q" . hydra-multiple-cursors/body))
-    :config
-    ;; https://github.com/abo-abo/hydra/wiki/multiple-cursors
-    (defhydra hydra-multiple-cursors (:hint nil)
-      "
- Up^^             Down^^           Miscellaneous           % 2(mc/num-cursors) cursor%s(if (> (mc/num-cursors) 1) \"s\" \"\")
-------------------------------------------------------------------
- [_p_]   Next     [_n_]   Next     [_l_] Edit lines  [_0_] Insert numbers
- [_P_]   Skip     [_N_]   Skip     [_a_] Mark all    [_A_] Insert letters
- [_M-p_] Unmark   [_M-n_] Unmark   [_s_] Search      [_q_] Quit
- [_|_] Align with input CHAR       [Click] Cursor at point"
-      ("l" mc/edit-lines :exit t)
-      ("a" mc/mark-all-like-this :exit t)
-      ("n" mc/mark-next-like-this)
-      ("N" mc/skip-to-next-like-this)
-      ("M-n" mc/unmark-next-like-this)
-      ("p" mc/mark-previous-like-this)
-      ("P" mc/skip-to-previous-like-this)
-      ("M-p" mc/unmark-previous-like-this)
-      ("|" mc/vertical-align)
-      ("s" mc/mark-all-in-region-regexp :exit t)
-      ("0" mc/insert-numbers :exit t)
-      ("A" mc/insert-letters :exit t)
-      ("<mouse-1>" mc/add-cursor-on-click)
-      ;; Help with click recognition in this hydra
-      ("<down-mouse-1>" ignore)
-      ("<drag-mouse-1>" ignore)
-      ("q" nil)))
-
   (leaf window_customize
     :doc "window操作を直感的に行う"
     :bind (("C-t" . hydra-window/body))
@@ -178,7 +178,14 @@
   (leaf vertico :ensure t
     :doc "ミニバッファに垂直に候補を表示して、インタラクティブに選択出来るUIを提供する"
     :url "https://github.com/minad/vertico"
-    :global-minor-mode t)
+    :global-minor-mode t
+    :config
+    ;; mini-modeline-modeの背景と色がかぶるのでカレントの見た目を調整
+    (set-face-attribute 'vertico-current nil :underline t :bold t)
+
+    (leaf savehist
+      :doc "ミニバッファの表示履歴を保存する"
+      :global-minor-mode t))
 
   (leaf consult :ensure t
     :doc "補完コマンドを提供する"
@@ -187,14 +194,24 @@
 	   ("C-x b" . consult-buffer)
            ("C-x 4 b" . consult-buffer-other-window)
            ("C-x 5 b" . consult-buffer-other-frame)
+	   ;; Other custom bindings
+           ("M-y" . consult-yank-pop)
 	   ;; M-g bindings (goto-map)
+           ("M-g e" . consult-compile-error)
+           ("M-g f" . consult-flycheck)
            ("M-g g" . consult-goto-line)
+           ("M-g M-g" . consult-goto-line)
+           ("M-g o" . consult-outline)
+           ("M-g m" . consult-mark)
+           ("M-g k" . consult-global-mark)
+           ("M-g i" . consult-imenu)
+           ("M-g I" . consult-imenu-multi)
 	   ;; M-s bindings (search-map)
 	   ("M-s l" . consult-line)
            ("M-s r" . consult-ripgrep)
-	   ("M-s d" . consult-find)
+	   ("M-s f" . my-consult-fd)
 	   ("M-s g r" . my-consult-ghq-ripgrep)
-	   ("M-s g d" . my-consult-ghq-find))
+	   ("M-s g f" . my-consult-ghq-fd))
     :config
     (leaf orderless :ensure t
       :doc "補完候補絞込のいい感じのスタイルを提供する"
@@ -214,7 +231,33 @@
       :doc "LSP-mode Consult integration"
       :url "https://github.com/gagbo/consult-lsp")
 
-    (leaf my-consult-ghq:ghqの結果をconsultに渡す
+    (leaf my-consult-fd
+      :doc "consult-findのfd版 https://github.com/minad/consult/wiki#find-files-using-fd"
+      :defun (consult--fd-builder consult--find consult--directory-prompt consult--command-split consult--join-regexps my-consult-fd--builder)
+      :defvar (consult--regexp-compiler)
+      :init
+      (defun my-consult-fd--builder (input)
+	"my-consult-fdの設定みたいなもの"
+	(pcase-let* ((`(,arg . ,opts) (consult--command-split input))
+		     (`(,re . ,hl) (funcall consult--regexp-compiler
+					    arg 'extended t)))
+	  (when re
+	    (list :command (append
+			    (list "fd" "--color=never" "--full-path" "--hidden"
+				  (consult--join-regexps re 'extended))
+			    opts)
+		  :highlight hl))))
+
+      (defun my-consult-fd (&optional dir initial)
+	"my-consult-fdの本体"
+	(interactive "P")
+	(let* ((prompt-dir (consult--directory-prompt "Fd" dir))
+               (default-directory (cdr prompt-dir)))
+	  (find-file (consult--find (car prompt-dir) #'my-consult-fd--builder initial)))))
+
+    (leaf my-consult-ghq
+      "ghqの結果をconsultに渡す"
+      :defun (my-consult-ghq--read my-consult-ghq--list-candidates consult--read)
       :init
       (defun my-consult-ghq--list-candidates ()
 	"ghq listの結果をリストで返す"
@@ -238,10 +281,10 @@
 	 :prompt "ghq: "
 	 :category 'file))
 
-      (defun my-consult-ghq-find ()
+      (defun my-consult-ghq-fd ()
 	"ghq管理のリポジトリ一覧から選び、プロジェクト内ファイル検索"
 	(interactive)
-	(consult-find (my-consult-ghq--read)))
+	(my-consult-fd (my-consult-ghq--read)))
 
       (defun my-consult-ghq-ripgrep ()
 	"ghq管理のリポジトリ一覧から選び、プロジェクト内でripgrep"
@@ -275,6 +318,7 @@
   (leaf tree-sitter :ensure (t tree-sitter-langs)
     :doc "各言語に上質なシンタックスハイライトを適用する"
     :url "https://github.com/emacs-tree-sitter/elisp-tree-sitter"
+    :defvar (tree-sitter-major-mode-language-alist)
     :require tree-sitter-langs
     :config
     (global-tree-sitter-mode)
