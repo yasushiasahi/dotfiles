@@ -5,7 +5,7 @@
 ;;; Code:
 
 ;; Solarizedのテーマが読み込まれるまでの一瞬白背景がちらつくのを抑制
-(set-face-attribute 'default nil :family "FiraCode Nerd Font" :height 120 :background "#002b36")
+(set-face-attribute 'default nil :family "FiraCode Nerd Font" :background "#002b36")
 
 ;; GUIを消す
 (menu-bar-mode -1)			; メニューバーを表示しない
