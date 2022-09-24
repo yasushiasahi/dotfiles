@@ -19,7 +19,7 @@ set -Ux LSP_USE_PLISTS true
 
 # エイリアス
 balias ls 'exa -alh --icons'
-balias tree 'exa --tree'
+balias tree 'exa --tree --git-ignore'
 balias rm trash
 balias E 'open -a /Applications/Emacs.app/'
 
