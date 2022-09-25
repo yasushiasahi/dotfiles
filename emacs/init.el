@@ -79,7 +79,7 @@
   (leaf recentf
     :doc "最近開いたファイルの履歴を保存する"
     :global-minor-mode t
-    :custom ((recentf-max-saved-items . 2000))
+    :custom ((recentf-max-saved-items . 100))
     :defvar (recentf-exclude)
     :config
     (add-to-list 'recentf-exclude no-littering-var-directory)
@@ -227,7 +227,9 @@
 (leaf orderless :ensure t
   :doc "補完候補絞込のいい感じのスタイルを提供する"
   :url "https://github.com/oantolin/orderless"
-  :custom ((completion-styles . '(orderless basic))))
+  :custom ((completion-styles . '(orderless basic))
+           (completion-category-defaults . nil)
+           (completion-category-overrides . nil)))
 
 (leaf marginalia :ensure t
   :doc "補完候補の詳細を表示する"
@@ -398,7 +400,7 @@
     :doc "Consult integration for Embark"
     :url "https://github.com/oantolin/embark"
     :require t
-    :hook ((embark-collect-mode . consult-preview-at-point-mode))))
+    :hook ((embark-collect-mode-hook . consult-preview-at-point-mode))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; プログラミング関連のユーティリティ
@@ -408,9 +410,9 @@
   :url "https://github.com/emacs-tree-sitter/elisp-tree-sitter"
   :defvar (tree-sitter-major-mode-language-alist)
   :require tree-sitter-langs
+  :hook ((tree-sitter-after-on-hook . tree-sitter-hl-mode))
   :config
   (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
   ;; TSXの対応
   (tree-sitter-require 'tsx)
   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
@@ -468,9 +470,11 @@
   :doc "LSP mode"
   :url "https://github.com/emacs-lsp/lsp-mode"
   :hook ((lsp-mode-hook . lsp-enable-which-key-integration)
+         (lsp-completion-mode-hook . my-lsp-mode-setup-completion)
          ((typescript-mode-hook typescript-tsx-mode-hook) . lsp-deferred))
   :custom ((lsp-keymap-prefix . "C-c l") ; lsp-mode-mapのキーバインド
            (lsp-headerline-breadcrumb-enable . nil) ; ファイルパスのパンクズを無効化
+           (lsp-completion-provider . :none)
            ;; (lsp-enable-indentation . nil)
            ;; typescript
            (lsp-clients-typescript-server-args . '("--stdio" "--tsserver-log-file" "/dev/stderr")) ; tsファイルを開くと各プロジェクトフォルダに.logフォルダを作成してしまうのをやめていただく https://github.com/emacs-lsp/lsp-mode/issues/1490#issuecomment-625825914
@@ -484,6 +488,12 @@
   :config
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.next\\'")
 
+  ;; https://github.com/minad/corfu/wiki#advanced-example-configuration-with-orderless
+  (defun my-lsp-mode-setup-completion ()
+    "lsp-modeのcapfをcorfuに対応させる"
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
+
   (leaf lsp-tailwindcss :ensure t
     :doc "A lsp-mode client for tailwindcss"
     :url "https://github.com/merrickluo/lsp-tailwindcss")
@@ -491,6 +501,7 @@
   (leaf lsp-ui :ensure t
     :doc "UI modules for lsp-mode"
     :url "https://github.com/emacs-lsp/lsp-ui"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; メジャーモード

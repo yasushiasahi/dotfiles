@@ -23,32 +23,14 @@ balias tree 'exa --tree --git-ignore'
 balias rm trash
 balias E 'open -a /Applications/Emacs.app/'
 
-# emacs vtermの設定 https://github.com/akermu/emacs-libvterm#shell-side-configuration
-function vterm_printf
-    if begin
-            [ -n "$TMUX" ]; and string match -q -r "screen|tmux" "$TERM"
-        end
-        # tell tmux to pass the escape sequences through
-        printf "\ePtmux;\e\e]%s\007\e\\" "$argv"
-    else if string match -q -- "screen*" "$TERM"
-        # GNU screen (screen, screen-256color, screen-256color-bce)
-        printf "\eP\e]%s\007\e\\" "$argv"
-    else
-        printf "\e]%s\e\\" "$argv"
-    end
-end
-
-if [ "$INSIDE_EMACS" = vterm ]
-    function clear
-        vterm_printf "51;Evterm-clear-scrollback"
-        tput clear
-    end
-end
-
-
 if status is-interactive
     # Commands to run in interactive sessions can go here
 
     # 起動時の挨拶文を非表示にする
     set fish_greeting
+
+    # emacs vtermの設定を読み込む https://github.com/akermu/emacs-libvterm#shell-side-configuration-files
+    if test "$INSIDE_EMACS" = vterm && test -n $EMACS_VTERM_PATH && test -f {$EMACS_VTERM_PATH}/etc/emacs-vterm-bash.sh
+        source {$EMACS_VTERM_PATH}/etc/emacs-vterm.fish
+    end
 end
