@@ -34,6 +34,7 @@
       :doc "対話形式でマクロを展開する"
       :url "https://github.com/joddie/macrostep")))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 見た目
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,7 +88,7 @@
 
   (leaf savehist
     :doc "ミニバッファの表示履歴を保存する"
-    :custom `((savehist-file . ,(no-littering-expand-var-file-name "history")))
+    ;; :custom `((savehist-file . ,(no-littering-expand-var-file-name "history")))
     :global-minor-mode t)
 
   (leaf cus-start
@@ -320,7 +321,7 @@
 					                                arg 'extended t)))
 	      (when re
 	        (list :command (append
-			                    (list "fd" "--color=never" "--full-path" "--hidden"
+			                    (list "fd" "--color=never" "--full-path" "--hidden" "--exclude=.git"
 				                        (consult--join-regexps re 'extended))
 			                    opts)
 		            :highlight hl))))
@@ -412,7 +413,6 @@
   :require tree-sitter-langs
   :hook ((tree-sitter-after-on-hook . tree-sitter-hl-mode))
   :config
-  (global-tree-sitter-mode)
   ;; TSXの対応
   (tree-sitter-require 'tsx)
   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
@@ -433,7 +433,8 @@
                  (.eq? @function.call "styled"))
       arguments: ((template_string) @property.definition
                   (.offset! @property.definition 0 1 0 -1)))
-     ]))
+     ])
+  (global-tree-sitter-mode))
 
 (leaf add-node-modules-path :ensure t
   :doc "Add node_modules to your exec-path"
@@ -477,12 +478,12 @@
            (lsp-completion-provider . :none)
            ;; (lsp-enable-indentation . nil)
            ;; typescript
-           (lsp-clients-typescript-server-args . '("--stdio" "--tsserver-log-file" "/dev/stderr")) ; tsファイルを開くと各プロジェクトフォルダに.logフォルダを作成してしまうのをやめていただく https://github.com/emacs-lsp/lsp-mode/issues/1490#issuecomment-625825914
+           ; (lsp-clients-typescript-server-args . '("--stdio" "--tsserver-log-file" "/dev/stderr")) ; tsファイルを開くと各プロジェクトフォルダに.logフォルダを作成してしまうのをやめていただく https://github.com/emacs-lsp/lsp-mode/issues/1490#issuecomment-625825914
            ;; rust
-           ;; (lsp-rust-analyzer-cargo-watch-command . "clippy")
+           (lsp-rust-analyzer-cargo-watch-command . "clippy")
            ;; (lsp-rust-analyzer-proc-macro-enable . t)
            ;; (lsp-rust-analyzer-experimental-proc-attr-macros . t)
-           ;; (lsp-rust-analyzer-server-display-inlay-hints . t)
+           (lsp-rust-analyzer-server-display-inlay-hints . t)
 	         )
   :defvar lsp-file-watch-ignored-directories
   :config
@@ -550,6 +551,10 @@
   :url "https://github.com/yoshiki/yaml-mode"
   :bind (:yaml-mode-map
 	       ("C-m" . newline-and-indent)))
+
+(leaf json-mode :ensure t
+  :doc "Major mode for editing JSON files."
+  :url "https://github.com/joshwnj/json-mode")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

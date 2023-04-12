@@ -1,1 +1,4 @@
 .DS_Store
+
+# typescript-language-server's log file
+.log/

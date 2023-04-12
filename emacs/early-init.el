@@ -4,8 +4,8 @@
 
 ;;; Code:
 
-;; Solarizedのテーマが読み込まれるまでの一瞬白背景がちらつくのを抑制
-(set-face-attribute 'default nil :family "FiraCode Nerd Font" :background "#002b36")
+
+
 
 ;; GUIを消す
 (menu-bar-mode -1)			; メニューバーを表示しない
@@ -26,7 +26,10 @@
  '(gc-cons-threshold 100000000)			     ; ガベージコレクションが発火するメモリの閾値 https://emacs-lsp.github.io/lsp-mode/page/performance/#adjust-gc-cons-threshold
  '(read-process-output-max (* 1024 1024))	     ; https://emacs-lsp.github.io/lsp-mode/page/performance/#increase-the-amount-of-data-which-emacs-reads-from-the-process
  '(frame-title-format "")                      ; titlebarを""にする（何も表示しない）
+ '(ring-bell-function 'ignore)                 ; 警告音（ピープ音）をならさい
  )
+
+(set-face-attribute 'default nil :family "FiraCode Nerd Font")
 
 ;; Mac portでは必要ない https://github.com/railwaycat/homebrew-emacsmacport/wiki/Natural-Title-Bar
 ;; (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
