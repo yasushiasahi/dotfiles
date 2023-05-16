@@ -58,13 +58,6 @@ font:
     x: 0
     y: 2
 
-  # Thin stroke font rendering (macOS only)
-  #
-  # Thin strokes are suitable for retina displays, but for non-retina screens
-  # it is recommended to set `use_thin_strokes` to `false`.
-  use_thin_strokes: true
-
-
 # Colors (Solarized Dark)
 # https://github.com/eendroroy/alacritty-theme/blob/master/themes/solarized_dark.yaml
 colors:

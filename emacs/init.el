@@ -51,16 +51,7 @@
   :url "https://github.com/kiennq/emacs-mini-modeline"
   :custom-face (mini-modeline-mode-line . '((t :background "#008b8b" :height 0.1 :box nil)))
   :custom ((mini-modeline-face-attr . nil))
-  :global-minor-mode t
-  :config
-  ;; ファイル名をプロジェクトルートからのフルパスで表示する
-  ;; (setq-default mode-line-buffer-identification
-  ;;               '(:eval (format-mode-line (propertized-buffer-identification (or (when-let* ((buffer-file-truename buffer-file-truename)
-  ;;                                                                                            (prj (cdr-safe (project-current)))
-  ;;                                                                                            (prj-parent (file-name-directory (directory-file-name (expand-file-name prj)))))
-  ;;                                                                                  (concat (file-relative-name (file-name-directory buffer-file-truename) prj-parent) (file-name-nondirectory buffer-file-truename)))
-  ;;                                                                                "%b"))))))
-  )
+  :global-minor-mode t)
 
 (leaf fira-code-mode :ensure t
   :doc "FiraCodeのリガチャをいい感じに設定してくれる"
@@ -94,6 +85,10 @@
   (leaf cus-start
     :doc "編集中のファイルのバックアップを作成する"
     :custom `((auto-save-file-name-transforms . '((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))))
+
+  ;; (leaf files
+  ;;   :doc "オープン時(編集前)のファイルをバックアップを作成する"
+  ;;   :custom `((backup-directory-alist . '((".*" . ,(no-littering-expand-var-file-name "backup/"))))))
 
   (leaf cus-edit
     :doc "init.el内にcustom-set-variablesのダンプを吐かせないようにする"
@@ -222,6 +217,38 @@
     ("0" delete-window)
     ("1" delete-other-windows)))
 
+;; shut up, emacs!
+(leaf multiple-cursors :ensure t
+  :doc "Multiple cursors for Emacs."
+  :url "https://github.com/magnars/multiple-cursors.el"
+  :bind (("C-q" . hydra-multiple-cursors/body))
+  :config
+  (defhydra hydra-multiple-cursors (:hint nil)
+    "
+ Up^^             Down^^           Miscellaneous           % 2(mc/num-cursors) cursor%s(if (> (mc/num-cursors) 1) \"s\" \"\")
+------------------------------------------------------------------
+ [_p_]   Next     [_n_]   Next     [_l_] Edit lines  [_0_] Insert numbers
+ [_P_]   Skip     [_N_]   Skip     [_a_] Mark all    [_A_] Insert letters
+ [_M-p_] Unmark   [_M-n_] Unmark   [_s_] Search      [_q_] Quit
+ [_|_] Align with input CHAR       [Click] Cursor at point"
+    ("l" mc/edit-lines :exit t)
+    ("a" mc/mark-all-like-this :exit t)
+    ("n" mc/mark-next-like-this)
+    ("N" mc/skip-to-next-like-this)
+    ("M-n" mc/unmark-next-like-this)
+    ("p" mc/mark-previous-like-this)
+    ("P" mc/skip-to-previous-like-this)
+    ("M-p" mc/unmark-previous-like-this)
+    ("|" mc/vertical-align)
+    ("s" mc/mark-all-in-region-regexp :exit t)
+    ("0" mc/insert-numbers :exit t)
+    ("A" mc/insert-letters :exit t)
+    ("<mouse-1>" mc/add-cursor-on-click)
+    ;; Help with click recognition in this hydra
+    ("<down-mouse-1>" ignore)
+    ("<drag-mouse-1>" ignore)
+    ("q" nil)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; フィジーファインダー、オートコンプリート
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -235,6 +262,8 @@
 (leaf marginalia :ensure t
   :doc "補完候補の詳細を表示する"
   :url "https://github.com/minad/marginalia"
+  :bind ((:minibuffer-local-map
+          ("M-A" . marginalia-cycle)))
   :global-minor-mode t)
 
 (leaf vertico :ensure t
@@ -248,6 +277,7 @@
 (leaf consult :ensure t
   :doc "補完コマンドを提供する"
   :url "https://github.com/minad/consult"
+  :custom ((consult-find-args . "find . -not ( -wholename */.* -prune )"))
   :bind (;; C-c bindings (mode-specific-map)
          ("C-c h" . consult-history)
          ("C-c m" . consult-mode-command)
@@ -274,7 +304,7 @@
          ("M-s r" . my-consult-ripgrep)
 	       ("M-s f" . my-consult-fd)
 	       ("M-s g r" . my-consult-ghq-ripgrep)
-	       ("M-s g f" . my-consult-ghq-fd))
+	       ("M-s g f" . my-consult-ghq-find))
   :config
   (leaf consult-flycheck :ensure t
     :doc "Provides the command `consult-flycheck'"
@@ -310,31 +340,39 @@
       (consult-ripgrep)))
 
   (leaf my-consult-fd
-    :doc "consult-findのfd版 https://github.com/minad/consult/wiki#find-files-using-fd"
-    :defun (consult--fd-builder consult--find consult--directory-prompt consult--command-split consult--join-regexps my-consult-fd--builder)
-    :defvar (consult--regexp-compiler)
+    :doc "consult-findのfdバージョン"
+    :defun (consult--command-split consult--regexp-compiler consult--join-regexps consult--directory-prompt consult--find consult--fd-builder)
+    :defvar (consult--regexp-compiler )
     :init
-    (defun my-consult-fd--builder (input)
-	    "my-consult-fdの設定みたいなもの"
-	    (pcase-let* ((`(,arg . ,opts) (consult--command-split input))
-		               (`(,re . ,hl) (funcall consult--regexp-compiler
-					                                arg 'extended t)))
-	      (when re
-	        (list :command (append
-			                    (list "fd" "--color=never" "--full-path" "--hidden" "--exclude=.git"
-				                        (consult--join-regexps re 'extended))
-			                    opts)
-		            :highlight hl))))
+    (defvar consult--fd-command nil)
+    (defun consult--fd-builder (input)
+      (unless consult--fd-command
+        (setq consult--fd-command
+              (if (eq 0 (call-process-shell-command "fdfind"))
+                  "fdfind"
+                "fd")))
+      (pcase-let* ((`(,arg . ,opts) (consult--command-split input))
+                   (`(,re . ,hl) (funcall consult--regexp-compiler
+                                          arg 'extended t)))
+        (when re
+          (cons (append
+                 (list consult--fd-command
+                       "--color=never" "--full-path" "--hidden" "--type" "file" "--exclude" ".git/*"
+                       (consult--join-regexps re 'extended))
+                 opts)
+                hl))))
 
     (defun my-consult-fd (&optional dir initial)
-	    "my-consult-fdの本体"
-	    (interactive "P")
-	    (let* ((prompt-dir (consult--directory-prompt "Fd" dir))
-             (default-directory (cdr prompt-dir)))
-	      (find-file (consult--find (car prompt-dir) #'my-consult-fd--builder initial)))))
+      (interactive "P")
+
+      (pcase-let* ((`(,prompt ,paths ,dir) (consult--directory-prompt "Fd" dir))
+                   (default-directory dir))
+        paths
+        (find-file (consult--find prompt #'consult--fd-builder initial))))
+    )
 
   (leaf my-consult-ghq
-    "ghqの結果をconsultに渡す"
+    :doc "ghqの結果をconsultに渡す"
     :defun (my-consult-ghq--read my-consult-ghq--list-candidates consult--read)
     :init
     (defun my-consult-ghq--list-candidates ()
@@ -359,7 +397,7 @@
 	     :prompt "ghq: "
 	     :category 'file))
 
-    (defun my-consult-ghq-fd ()
+    (defun my-consult-ghq-find ()
 	    "ghq管理のリポジトリ一覧から選び、プロジェクト内ファイル検索"
 	    (interactive)
 	    (my-consult-fd (my-consult-ghq--read)))
@@ -382,13 +420,32 @@
   :init
   (global-corfu-mode)
   :config
-  (leaf corfu-doc :ensure t
-    :doc "Corfuの選択対象のドキュメントを表示"
-    :url "https://github.com/galeo/corfu-doc"
-    :bind (:corfu-map
-	         ("M-p" . corfu-doc-scroll-down)
-	         ("M-n" . corfu-doc-scroll-up))
-    :hook corfu-mode-hook))
+  (leaf corfu-history :require t
+    :doc "Sorting by history for Corfu"
+    :url "https://github.com/minad/corfu"
+    :defvar (savehist-additional-variables)
+    :global-minor-mode t
+    :config
+    (add-to-list 'savehist-additional-variables 'corfu-history))
+
+  (leaf corfu-indexed :require t
+    :doc "Select indexed candidates"
+    :url "https://github.com/minad/corfu"
+    :global-minor-mode t)
+
+  (leaf corfu-popupinfo :require t
+    :doc "Candidate information popup for Corfu"
+    :url "https://github.com/minad/corfu"
+    :global-minor-mode t
+    :custom ((corfu-popupinfo-delay . '(1.0 . 1.0))))
+
+  (leaf kind-icon :ensure t
+    :doc "Completion kind icons"
+    :url "https://github.com/jdtsmith/kind-icon"
+    :defvar (corfu-margin-formatters)
+    :custom ((kind-icon-default-face . 'corfu-default))
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)))
 
 (leaf embark :ensure t
   :doc "Conveniently act on minibuffer completions"
@@ -475,9 +532,13 @@
          ((typescript-mode-hook typescript-tsx-mode-hook) . lsp-deferred))
   :custom ((lsp-keymap-prefix . "C-c l") ; lsp-mode-mapのキーバインド
            (lsp-headerline-breadcrumb-enable . nil) ; ファイルパスのパンクズを無効化
-           (lsp-completion-provider . :none)
+           (lsp-completion-provider . :none) ; corfuを優先する
            ;; (lsp-enable-indentation . nil)
            ;; typescript
+           (lsp-javascript-suggest-auto-imports . nil)
+           (lsp-javascript-suggest-paths . nil)
+           (lsp-typescript-suggest-auto-imports . nil)
+           (lsp-typescript-suggest-paths . nil)
            ; (lsp-clients-typescript-server-args . '("--stdio" "--tsserver-log-file" "/dev/stderr")) ; tsファイルを開くと各プロジェクトフォルダに.logフォルダを作成してしまうのをやめていただく https://github.com/emacs-lsp/lsp-mode/issues/1490#issuecomment-625825914
            ;; rust
            (lsp-rust-analyzer-cargo-watch-command . "clippy")
@@ -489,6 +550,13 @@
   :config
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.next\\'")
 
+  ;; https://github.com/emacs-lsp/lsp-mode/issues/2681#issuecomment-1214902146
+  (advice-add 'json-parse-buffer :around
+              (lambda (orig &rest rest)
+                (while (re-search-forward "\\u0000" nil t)
+                  (replace-match ""))
+                (apply orig rest)))
+
   ;; https://github.com/minad/corfu/wiki#advanced-example-configuration-with-orderless
   (defun my-lsp-mode-setup-completion ()
     "lsp-modeのcapfをcorfuに対応させる"
@@ -497,12 +565,12 @@
 
   (leaf lsp-tailwindcss :ensure t
     :doc "A lsp-mode client for tailwindcss"
-    :url "https://github.com/merrickluo/lsp-tailwindcss")
+    :url "https://github.com/merrickluo/lsp-tailwindcss"
+    :custom ((lsp-tailwindcss-add-on-mode . t)))
 
   (leaf lsp-ui :ensure t
     :doc "UI modules for lsp-mode"
     :url "https://github.com/emacs-lsp/lsp-ui"))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; メジャーモード
@@ -539,7 +607,7 @@
 	         (web-mode-enable-current-column-highlight . t)
 	         ;; (web-mode-enable-auto-closing . t)
 	         ;; (web-mode-enable-auto-expanding . t)
-	         (web-mode-comment-style . 2)))
+	         (Web-mode-comment-style . 2)))
 
 (leaf fish-mode :ensure t
   :doc "Fishモード"
