@@ -1,4 +1,4 @@
-;;; init.el --- Initialization file for Emacs  -*- lexical-binding: t; -*-
+;;; init.el --- Initialization file for Emacs  -*- lexical-binding: t; -*-l
 ;;; Commentary:
 ;;; Emacs Startup File --- initialization for Emacs
 ;;; Code:
@@ -86,10 +86,6 @@
     :doc "編集中のファイルのバックアップを作成する"
     :custom `((auto-save-file-name-transforms . '((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))))
 
-  ;; (leaf files
-  ;;   :doc "オープン時(編集前)のファイルをバックアップを作成する"
-  ;;   :custom `((backup-directory-alist . '((".*" . ,(no-littering-expand-var-file-name "backup/"))))))
-
   (leaf cus-edit
     :doc "init.el内にcustom-set-variablesのダンプを吐かせないようにする"
     :custom `((custom-file . ,(no-littering-expand-var-file-name "custom.el")))))
@@ -148,6 +144,15 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)       ; yesではなくyと打てる
 (setq use-dialog-box nil)               ; ダイアログmacosのダイアログではなく、yes-or-noを使う
+
+(leaf my-kill-all-buffer
+  :doc "scrachとmessage以外のbufferを消す"
+  :config
+  (defun my-kill-all-buffer()
+    (interactive)
+    (yes-or-no-p "Kill all buffer? ")
+    (dolist (buf (buffer-list))
+      (kill-buffer buf))))
 
 (leaf autorevert
   :doc "開いているfileがEmacs外で更新された時、EmacsのBufferも更新する"
@@ -522,7 +527,7 @@
 (leaf emmet-mode :ensure t
   :doc "Unofficial Emmet's support for emacs"
   :url "https://github.com/smihica/emmet-mode"
-  :hook (typescript-tsx-mode-hook web-mode-hook))
+  :hook ((typescript-tsx-mode-hook web-mode-hook) . emmet-mode))
 
 (leaf lsp-mode :ensure t
   :doc "LSP mode"
@@ -551,11 +556,11 @@
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.next\\'")
 
   ;; https://github.com/emacs-lsp/lsp-mode/issues/2681#issuecomment-1214902146
-  (advice-add 'json-parse-buffer :around
-              (lambda (orig &rest rest)
-                (while (re-search-forward "\\u0000" nil t)
-                  (replace-match ""))
-                (apply orig rest)))
+  ;; (advice-add 'json-parse-buffer :around
+  ;;             (lambda (orig &rest rest)
+  ;;               (while (re-search-forward "\\u0000" nil t)
+  ;;                 (replace-match ""))
+  ;;               (apply orig rest)))
 
   ;; https://github.com/minad/corfu/wiki#advanced-example-configuration-with-orderless
   (defun my-lsp-mode-setup-completion ()

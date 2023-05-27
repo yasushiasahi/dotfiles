@@ -27,6 +27,7 @@
  '(read-process-output-max (* 1024 1024))	     ; https://emacs-lsp.github.io/lsp-mode/page/performance/#increase-the-amount-of-data-which-emacs-reads-from-the-process
  '(frame-title-format "")                      ; titlebarを""にする（何も表示しない）
  '(ring-bell-function 'ignore)                 ; 警告音（ピープ音）をならさい
+ '(make-backup-files nil)                      ; オープン時(編集前)のファイルをバックアップを作成しない
  )
 
 (set-face-attribute 'default nil :family "FiraCode Nerd Font")
