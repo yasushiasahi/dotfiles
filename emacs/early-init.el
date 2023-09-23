@@ -4,9 +4,6 @@
 
 ;;; Code:
 
-
-
-
 ;; GUIを消す
 (menu-bar-mode -1)			; メニューバーを表示しない
 (tool-bar-mode -1)			; ツールバーを表示しない

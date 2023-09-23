@@ -538,29 +538,22 @@
   :custom ((lsp-keymap-prefix . "C-c l") ; lsp-mode-mapのキーバインド
            (lsp-headerline-breadcrumb-enable . nil) ; ファイルパスのパンクズを無効化
            (lsp-completion-provider . :none) ; corfuを優先する
-           ;; (lsp-enable-indentation . nil)
-           ;; typescript
-           (lsp-javascript-suggest-auto-imports . nil)
-           (lsp-javascript-suggest-paths . nil)
-           (lsp-typescript-suggest-auto-imports . nil)
-           (lsp-typescript-suggest-paths . nil)
-           ; (lsp-clients-typescript-server-args . '("--stdio" "--tsserver-log-file" "/dev/stderr")) ; tsファイルを開くと各プロジェクトフォルダに.logフォルダを作成してしまうのをやめていただく https://github.com/emacs-lsp/lsp-mode/issues/1490#issuecomment-625825914
            ;; rust
            (lsp-rust-analyzer-cargo-watch-command . "clippy")
-           ;; (lsp-rust-analyzer-proc-macro-enable . t)
-           ;; (lsp-rust-analyzer-experimental-proc-attr-macros . t)
-           (lsp-rust-analyzer-server-display-inlay-hints . t)
-	         )
-  :defvar lsp-file-watch-ignored-directories
+           (lsp-rust-analyzer-server-display-inlay-hints . t))
+  :bind (("C-c e" . lsp-eslint-apply-all-fixes))
+  :defvar (lsp-file-watch-ignored-directories lsp-command-map)
   :config
-  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.next\\'")
+  ;; https://github.com/emacs-lsp/lsp-mode/issues/2681#issuecomment-1500173268
+  (advice-add 'json-parse-buffer :around
+              (lambda (orig &rest rest)
+                (save-excursion
+                  (while (re-search-forward "\\\\u0000" nil t)
+                    (replace-match "")))
+                (apply orig rest)))
 
-  ;; https://github.com/emacs-lsp/lsp-mode/issues/2681#issuecomment-1214902146
-  ;; (advice-add 'json-parse-buffer :around
-  ;;             (lambda (orig &rest rest)
-  ;;               (while (re-search-forward "\\u0000" nil t)
-  ;;                 (replace-match ""))
-  ;;               (apply orig rest)))
+  ;; TypeScript
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.next\\'")
 
   ;; https://github.com/minad/corfu/wiki#advanced-example-configuration-with-orderless
   (defun my-lsp-mode-setup-completion ()
@@ -575,7 +568,9 @@
 
   (leaf lsp-ui :ensure t
     :doc "UI modules for lsp-mode"
-    :url "https://github.com/emacs-lsp/lsp-ui"))
+    :url "https://github.com/emacs-lsp/lsp-ui")
+    :custom ((lsp-ui-doc-show-with-cursor . t)
+             (lsp-ui-doc-delay . 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; メジャーモード
